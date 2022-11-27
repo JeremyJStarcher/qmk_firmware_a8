@@ -5,6 +5,7 @@ const Y_ORIG = 177.75;
 
 const LAYER_FRONTSILK = 6;
 const LAYER_BACKSILK = 7;
+const LAYER_EDGECUT = 14;
 
 const UNIT = 19.05;
 
@@ -27,12 +28,16 @@ let layout = d1.layouts.LAYOUT.layout;
 const offset_x = 163.3487 - 156.21;
 const offset_y = 196.2 - 186.68; 
 
+
+const bbox = {
+  x1: Number.MAX_VALUE,
+  y1: Number.MAX_VALUE,
+  x2: 0,
+  y2: 0,
+}
+
 layout.forEach(key => {
   //  console.log(key);
-  // The keyboard layout editor and kicad have a different idea of what a key's position is.
-  // this causes keys that are longer then 1 unit to "slide" to the left, relative to the size of the key
-
-    const slide = 4/8;
 
     key.w = key.w || 1;
     key.h = key.h || 1;
@@ -69,6 +74,13 @@ layout.forEach(key => {
         let y1 = (key.ky - key.h/2) - hh /2 + KEYSWITCH_FIX_Y;
         let x2 = x1 + UNIT + ww;
         let y2 = y1 + UNIT + hh;
+
+
+        bbox.x1 = Math.min(x + UNIT/2, bbox.x1);
+        bbox.y1 = Math.min(y + UNIT/2, bbox.y1);
+
+        bbox.x2 = Math.max(x2, bbox.x2);
+        bbox.y2 = Math.max(y2, bbox.y2);
 
         key.bb_x1 = x1;
         key.bb_y1 = y1;
@@ -285,22 +297,22 @@ for (let xx = 0; xx < 100; xx+=1) {
       const item = items[0];
 
       if (doThese.includes(idx) || true) {
-        if (false) {
+        if (true) {
           findItem("SW", idx);
           placeItem(item.kx, item.ky);
         }
 
-        if (false) {
+        if (true) {
           findItem("D", idx);
           placeItem(item.dx, item.dy);
           rotateItem(90);
         }
 
-        if (false) {
+        if (true) {
           placeText(item.kx, item.ky, item.label, LAYER_FRONTSILK);
         }
 
-        if (false) {
+        if (true) {
           placeText(item.kx, item.ky, item.label, LAYER_BACKSILK);
         }
 
@@ -318,6 +330,18 @@ for (let xx = 0; xx < 100; xx+=1) {
       idx +=1;
     }
   }
+}
+
+if (true) {
+ 
+  drawRect(
+    bbox.x1,
+    bbox.y1,
+    bbox.x2,
+    bbox.y2,
+    LAYER_EDGECUT
+  );
+
 }
 
 /*
