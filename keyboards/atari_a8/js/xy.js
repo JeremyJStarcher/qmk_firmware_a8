@@ -125,6 +125,11 @@ function rotateItem(deg) {
   out.push(`sleep 1`);
 }
 
+function selectBackSilkScreen() {
+  selectFrontSilkScreen();
+  out.push(`xdotool key Down`) ; // Get to right item
+}
+
 function selectFrontSilkScreen() {
   for(let i = 0; i < 20; i++) {
     out.push(`xdotool key Up`) ; // top of list
@@ -140,20 +145,27 @@ function selectFrontSilkScreen() {
 }
 
 function placeText(x, y, text) {
+
+  /* Can't reach the "mirrored" checkbox on the
+     text tool, so we will put the text on the back
+     of the board, then use the 'flip' command to
+     move it forward. */
+
   out.push("# Activate edit mode")
   out.push(`xdotool key ctrl+shift+t`)
   out.push("sleep 1");
   out.push(`xdotool type "${text}"`); 
+  out.push("sleep 1");
   out.push(`xdotool key ctrl+Tab key Return`);
   out.push("sleep 1");
   out.push(`xdotool key Return`);
 
-  out.push(`xdotool key e sleep .5 key ctrl+Tab`); // escape the box
+  out.push(`xdotool key e sleep 1 key ctrl+Tab`); // escape the box
   out.push(`xdotool key space`) ; // Lock
   out.push(`xdotool key space`) ; // UnLock
   out.push(`xdotool key Tab`) ; // layer field
   
-  selectFrontSilkScreen();
+  selectBackSilkScreen();
 
   for(let i = 0; i < 4; i++) {
     out.push(`xdotool key Tab`) ; // Get to right item
@@ -164,6 +176,9 @@ function placeText(x, y, text) {
   out.push(`xdotool type ${y+13}`) ; // Y Position
 
   out.push(`xdotool key ctrl+Return`) ; // Save window
+  out.push("sleep 1")
+  out.push(`xdotool key f`) ; // Flip the silkscreen to the front.
+  out.push("sleep 1")
 }
 
 
@@ -181,7 +196,9 @@ layout = layout.filter(l => l.x !== -1);
 
 let idx = 201;
 
-const doThese = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
+//const doThese = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
+
+const doThese = [201];
 
 for (let xx = 0; xx < 100; xx+=1) {
   for (let yy = 0; yy < 100; yy += 1) {
@@ -190,17 +207,21 @@ for (let xx = 0; xx < 100; xx+=1) {
 
       const item = items[0];
 
-      if (doThese.includes(idx) || false) {
-        findItem("SW", idx);
-        placeItem(item.kx, item.ky);
-    
-        if (true) {
+      if (doThese.includes(idx) || true) {
+        if (false) {
+          findItem("SW", idx);
+          placeItem(item.kx, item.ky);
+        }
+
+        if (false) {
           findItem("D", idx);
           placeItem(item.dx, item.dy);
           rotateItem(90);
         }
-      //  placeText(item.kx, item.ky, item.label);
 
+        if (true) {
+          placeText(item.kx, item.ky, item.label);
+        }
       }
 
       idx +=1;
