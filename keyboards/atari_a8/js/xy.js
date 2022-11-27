@@ -1,5 +1,21 @@
 "use strict";
 
+
+//const LIMITED_ITEMS = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
+
+const LIMITED_ITEMS = [201];
+
+const DO_MOVE_SWITCH = true;
+const DO_MOVE_DIODE = false;
+const DO_SWITCH_FRONT_SILK = false;
+const DO_SWITCH_REAR_SILK = false;
+const DO_SWITCH_REAR_BBOX = false;
+const DO_BOARD_BBOX = true;
+
+const STARTING_INDEX = 201;
+const DO_ALL_ITEMS = true;
+
+
 const X_ORIG = 61;
 const Y_ORIG = 177.75;
 
@@ -88,6 +104,8 @@ layout.forEach(key => {
         key.bb_y2 = y2;        
     }
 })
+
+
 
 layout.sort((a, b) => {
     if (a.y < b.y) {
@@ -281,58 +299,60 @@ out.push("xdotool windowactivate $WIN_ID")
 // FIlter out things not on the grid itself
 layout = layout.filter(l => l.x !== -1);
 
-// layout.length = 10;
 
 
-let idx = 201;
-//const doThese = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
+function processAll(startingIndex) {
+  let idx = startingIndex;
 
-const doThese = [201];
-
-for (let xx = 0; xx < 100; xx+=1) {
-  for (let yy = 0; yy < 100; yy += 1) {
-    const items = layout.filter(key => key.matrix[0] === xx && key.matrix[1] === yy);
-    if (items.length > 0) {
-
-      const item = items[0];
-
-      if (doThese.includes(idx) || true) {
-        if (false) {
-          findItem("SW", idx);
-          placeItem(item.kx, item.ky);
+  for (let xx = 0; xx < 100; xx+=1) {
+    for (let yy = 0; yy < 100; yy += 1) {
+      const items = layout.filter(key => key.matrix[0] === xx && key.matrix[1] === yy);
+      if (items.length > 0) {
+  
+        const item = items[0];
+  
+        if (LIMITED_ITEMS.includes(idx) || DO_ALL_ITEMS) {
+          if (DO_MOVE_SWITCH) {
+            findItem("SW", idx);
+            placeItem(item.kx, item.ky);
+          }
+  
+          if (DO_MOVE_DIODE) {
+            findItem("D", idx);
+            placeItem(item.dx, item.dy);
+            rotateItem(90 + 180);
+          }
+  
+          if (DO_SWITCH_FRONT_SILK) {
+            placeText(item.kx, item.ky, item.label, LAYER_FRONTSILK);
+          }
+  
+          if (DO_SWITCH_REAR_SILK) {
+            placeText(item.kx, item.ky, item.label, LAYER_BACKSILK);
+          }
+  
+          if (DO_SWITCH_REAR_BBOX) {
+            drawRect(
+              item.bb_x1,
+              item.bb_y1,
+              item.bb_x2,
+              item.bb_y2,
+              LAYER_BACKSILK
+            );
+          }
         }
-
-        if (true) {
-          findItem("D", idx);
-          placeItem(item.dx, item.dy);
-          rotateItem(90 + 180);
-        }
-
-        if (false) {
-          placeText(item.kx, item.ky, item.label, LAYER_FRONTSILK);
-        }
-
-        if (false) {
-          placeText(item.kx, item.ky, item.label, LAYER_BACKSILK);
-        }
-
-        if (false) {
-          drawRect(
-            item.bb_x1,
-            item.bb_y1,
-            item.bb_x2,
-            item.bb_y2,
-            LAYER_BACKSILK
-          );
-        }
+  
+        idx +=1;
       }
-
-      idx +=1;
     }
   }
+  
 }
 
-if (false) {
+processAll(STARTING_INDEX);
+
+
+if (DO_BOARD_BBOX) {
  
   drawRect(
     bbox.x1,
