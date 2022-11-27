@@ -26,7 +26,7 @@ let layout = d1.layouts.LAYOUT.layout;
 
 // How much to move the diodes
 const offset_x = 163.3487 - 156.21;
-const offset_y = 196.2 - 186.68; 
+const offset_y = 196.2 - 186.68 -4; 
 
 
 const bbox = {
@@ -287,7 +287,7 @@ layout = layout.filter(l => l.x !== -1);
 let idx = 201;
 //const doThese = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
 
-const doThese = [222];
+const doThese = [201];
 
 for (let xx = 0; xx < 100; xx+=1) {
   for (let yy = 0; yy < 100; yy += 1) {
@@ -297,7 +297,7 @@ for (let xx = 0; xx < 100; xx+=1) {
       const item = items[0];
 
       if (doThese.includes(idx) || true) {
-        if (true) {
+        if (false) {
           findItem("SW", idx);
           placeItem(item.kx, item.ky);
         }
@@ -305,18 +305,18 @@ for (let xx = 0; xx < 100; xx+=1) {
         if (true) {
           findItem("D", idx);
           placeItem(item.dx, item.dy);
-          rotateItem(90);
+          rotateItem(90 + 180);
         }
 
-        if (true) {
+        if (false) {
           placeText(item.kx, item.ky, item.label, LAYER_FRONTSILK);
         }
 
-        if (true) {
+        if (false) {
           placeText(item.kx, item.ky, item.label, LAYER_BACKSILK);
         }
 
-        if (true) {
+        if (false) {
           drawRect(
             item.bb_x1,
             item.bb_y1,
@@ -332,7 +332,7 @@ for (let xx = 0; xx < 100; xx+=1) {
   }
 }
 
-if (true) {
+if (false) {
  
   drawRect(
     bbox.x1,
