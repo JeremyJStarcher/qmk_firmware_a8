@@ -3,18 +3,23 @@
 
 //const LIMITED_ITEMS = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258, 266];
 
-const LIMITED_ITEMS = [270];
+const LIMITED_ITEMS = [264];
+const DO_ALL_ITEMS = false;
 
 const DO_MOVE_SWITCH = false;
 const DO_MOVE_DIODE = false;
+const DO_MOVE_MOUNT_HOLE = false;
 const DO_SWITCH_FRONT_SILK = false;
 const DO_SWITCH_REAR_SILK = false;
-const DO_SWITCH_REAR_BBOX = true;
+const DO_SWITCH_REAR_BBOX = false;
 const DO_BOARD_BBOX = true;
 
-const STARTING_INDEX = 201;
-const DO_ALL_ITEMS = false;
+// Sometimes, for the text insert, the MIRROR option gets stuck on.
+const TEXT_MIRROR_SET = false
 
+const STARTING_INDEX = 201;
+
+const BOARD_BORDER = 10;
 
 const X_ORIG = 61;
 const Y_ORIG = 177.75;
@@ -33,8 +38,8 @@ const d1 = JSON.parse(data);
 let layout = d1.layouts.LAYOUT.layout;
 
 // How much to move the diodes
-const offset_x = 163.3487 - 156.21;
-const offset_y = 196.2 - 186.68 -4; 
+const offset_x = 6.5;
+const offset_y = 5.52; 
 
 const bbox = {
   x1: Number.MAX_VALUE,
@@ -169,13 +174,13 @@ function findItem(prefix, id) {
   out.push(`xdotool key Return`)
   out.push(`sleep 1`);
   out.push(`xdotool key Escape`)
-  out.push(`sleep 1`);
+  out.push(`sleep 2`);
 }
 
 function placeItem(x, y) {
   out.push("# Activate edit mode")
   out.push(`xdotool key e`)
-  out.push(`sleep 1`);
+  out.push(`sleep 3`);
   out.push(`xdotool key Tab sleep 0.3 key Tab`);
   out.push(`xdotool type ${x}`); 
   out.push(`xdotool sleep 0.3 key Tab`);
@@ -187,7 +192,7 @@ function placeItem(x, y) {
 function rotateItem(deg) {
   out.push("# Activate edit mode")
   out.push(`xdotool key e`)
-  out.push(`sleep 1`);
+  out.push(`sleep 3`);
   out.push(`xdotool key Tab sleep 0.3 key Tab`);
   out.push(`xdotool key Tab sleep 0.3 key Tab`);
   out.push(`xdotool key Tab sleep 0.3`);
@@ -213,22 +218,25 @@ function placeText(x, y, text, layer) {
 
   out.push("# Activate edit mode")
   out.push(`xdotool key ctrl+shift+t`)
-  out.push("sleep 1");
+  out.push("sleep 3");
   out.push(`xdotool type "${text}"`); 
   out.push("sleep 1");
-  out.push(`xdotool key ctrl+Tab key Return`);
+  out.push(`xdotool key ctrl+Tab sleep 0.5 key Return`);
   out.push("sleep 1");
   out.push(`xdotool key Return`);
 
   out.push("sleep 1")
 
-  out.push(`xdotool key e sleep 1 key ctrl+Tab`); // escape the box
-  out.push(`xdotool key space`) ; // Lock
-  out.push(`xdotool key space`) ; // UnLock
+  out.push(`xdotool key e sleep 3 key ctrl+Tab`); // escape the box
+  // out.push(`xdotool key space`) ; // Lock
+  // out.push(`xdotool key space`) ; // UnLock
   out.push(`xdotool key Tab`) ; // layer field
   
-  selectLayer(LAYER_BACKSILK);
-
+  if (TEXT_MIRROR_SET) {
+    selectLayer(LAYER_BACKSILK);
+  } else {
+    selectLayer(LAYER_FRONTSILK);
+  }
   out.push("sleep 1")
 
   for(let i = 0; i < 4; i++) {
@@ -236,15 +244,15 @@ function placeText(x, y, text, layer) {
   }
 
   out.push(`xdotool type ${x-2}`) ; // x position
+  out.push("sleep 1")
   out.push(`xdotool key Tab`) ; // Move to Y
   out.push(`xdotool type ${y+13}`) ; // Y Position
-
   out.push("sleep 1")
 
   out.push(`xdotool key ctrl+Return`) ; // Save window
   out.push("sleep 1")
 
-  if (layer === LAYER_FRONTSILK) {
+  if ((layer === LAYER_FRONTSILK && TEXT_MIRROR_SET) || (layer === LAYER_BACKSILK && !TEXT_MIRROR_SET))  {
      out.push(`xdotool key f`) ; // Flip the silkscreen to the front.
      out.push("sleep 1")
   }
@@ -329,6 +337,31 @@ function processAll(startingIndex) {
             placeItem(item.dx, item.dy);
             rotateItem(90 + 180);
           }
+
+          if (DO_MOVE_MOUNT_HOLE) {
+            findItem("H", idx);
+            if (true) {
+
+              let extra_x = 0;
+              let extra_y = 0;
+              if (idx == 240) {
+                extra_x = 3;
+              }
+
+              if (idx == 264) {
+                extra_y = 3;
+              }
+
+              if (idx == 257) {
+                extra_y = 3;
+              }
+
+              placeItem(item.bb_x1 + extra_x, item.bb_y1 +2 + extra_y);
+              out.push(`xdotool key f`) ; // Flip the silkscreen to the back
+            } else {
+              out.push(`xdotool key Delete`) ; // Blow it away
+            }
+          }
   
           if (DO_SWITCH_FRONT_SILK) {
             placeText(item.kx, item.ky, item.label, LAYER_FRONTSILK);
@@ -360,12 +393,31 @@ processAll(STARTING_INDEX);
 
 
 if (DO_BOARD_BBOX) {
- 
+
+  const MOUNT_HOLE_OFFSET = 5;
+
+  const mh_x1 = bbox.x1 - BOARD_BORDER + MOUNT_HOLE_OFFSET;
+  const mh_y1 = bbox.y1 - BOARD_BORDER + MOUNT_HOLE_OFFSET;
+  const mh_x2 = bbox.x2 + BOARD_BORDER - MOUNT_HOLE_OFFSET;
+  const mh_y2 = bbox.y2 + BOARD_BORDER - MOUNT_HOLE_OFFSET;
+
+  findItem("H", 101);
+  placeItem(mh_x1, mh_y1);
+
+  findItem("H", 102);
+  placeItem(mh_x2, mh_y1);
+
+  findItem("H", 103);
+  placeItem(mh_x2, mh_y2);
+
+  findItem("H", 104);
+  placeItem(mh_x1, mh_y2);
+
   drawRect(
-    bbox.x1,
-    bbox.y1,
-    bbox.x2,
-    bbox.y2,
+    bbox.x1 - BOARD_BORDER,
+    bbox.y1 - BOARD_BORDER,
+    bbox.x2 + BOARD_BORDER,
+    bbox.y2 + BOARD_BORDER,
     LAYER_EDGECUT
   );
 
