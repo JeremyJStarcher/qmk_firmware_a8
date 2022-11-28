@@ -1,19 +1,19 @@
 "use strict";
 
 
-//const LIMITED_ITEMS = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258];
+//const LIMITED_ITEMS = [201, 208, 225, 241, 257, 266, 226, 242, 210, 258, 266];
 
-const LIMITED_ITEMS = [201];
+const LIMITED_ITEMS = [270];
 
-const DO_MOVE_SWITCH = true;
+const DO_MOVE_SWITCH = false;
 const DO_MOVE_DIODE = false;
 const DO_SWITCH_FRONT_SILK = false;
 const DO_SWITCH_REAR_SILK = false;
-const DO_SWITCH_REAR_BBOX = false;
+const DO_SWITCH_REAR_BBOX = true;
 const DO_BOARD_BBOX = true;
 
 const STARTING_INDEX = 201;
-const DO_ALL_ITEMS = true;
+const DO_ALL_ITEMS = false;
 
 
 const X_ORIG = 61;
@@ -24,18 +24,10 @@ const LAYER_BACKSILK = 7;
 const LAYER_EDGECUT = 14;
 
 const UNIT = 19.05;
-
-// Node.js program to demonstrate the 
-// fs.readFileSync() method
  
-// Include fs module
 const fs = require('fs');
   
-// Calling the readFileSync() method
-// to read 'input.txt' file
-const data = fs.readFileSync('../info.json',
-            {encoding:'utf8', flag:'r'});
- 
+const data = fs.readFileSync('../info.json', {encoding:'utf8', flag:'r'});
 const d1 = JSON.parse(data);
     
 let layout = d1.layouts.LAYOUT.layout;
@@ -44,12 +36,11 @@ let layout = d1.layouts.LAYOUT.layout;
 const offset_x = 163.3487 - 156.21;
 const offset_y = 196.2 - 186.68 -4; 
 
-
 const bbox = {
   x1: Number.MAX_VALUE,
   y1: Number.MAX_VALUE,
-  x2: 0,
-  y2: 0,
+  x2: Number.MIN_VALUE,
+  y2: Number.MIN_VALUE,
 }
 
 layout.forEach(key => {
@@ -78,9 +69,9 @@ layout.forEach(key => {
 
         // The measured difference between the pin 1
         // (the key origin) and the top edge of the 
-        // box.
-        const KEYSWITCH_FIX_X = - 4.17 - 7.32 -.05;
-        const KEYSWITCH_FIX_Y = - 3.89 -.05;
+        // box.  (Measured by hand)
+        const KEYSWITCH_FIX_X = -11.565;
+        const KEYSWITCH_FIX_Y = -3.946;
 
         const ww = (key.w-1) * UNIT;
         const hh = (key.h-1) * UNIT;
@@ -91,17 +82,42 @@ layout.forEach(key => {
         let x2 = x1 + UNIT + ww;
         let y2 = y1 + UNIT + hh;
 
+        // The math for figuring out the actual bounding box is off, so manually correct for
+        // various key sizes.  (By hand/trial and error)
+        let xfix = 0;
+        if (key.w === 1) {
+          xfix = 0;
+        }
+        if (key.w === 1.25) {
+          xfix = 0.125;
+        }
+        if (key.w === 1.75) {
+          xfix = 0.375;
+        }
+        if (key.w === 2) {
+          xfix = .5;
+        }
+        if (key.w === 2.25) {
+          xfix = .625;
+        }
+        if (key.w === 6.25) {
+          xfix = 2.625;
+        }
+        x1 += xfix;
+        x2 += xfix;
 
-        bbox.x1 = Math.min(x + UNIT/2, bbox.x1);
-        bbox.y1 = Math.min(y + UNIT/2, bbox.y1);
+        if (key.x !== -1 && key.y !== -1) {
+          bbox.x1 = Math.min(x1, bbox.x1);
+          bbox.y1 = Math.min(y1, bbox.y1);
 
-        bbox.x2 = Math.max(x2, bbox.x2);
-        bbox.y2 = Math.max(y2, bbox.y2);
+          bbox.x2 = Math.max(x2, bbox.x2);
+          bbox.y2 = Math.max(y2, bbox.y2);
+        }
 
         key.bb_x1 = x1;
         key.bb_y1 = y1;
         key.bb_x2 = x2;
-        key.bb_y2 = y2;        
+        key.bb_y2 = y2;
     }
 })
 
@@ -123,16 +139,8 @@ layout.sort((a, b) => {
     return 1;
 })
 
-layout.forEach(key => {
-  //  console.log(`"${key.label}", ${key.kx}, ${key.ky}, ${key.rx}, ${key.ry}`);
-  //  console.log(`"${key.label}", ${key.y}, ${key.x}`);
-})
-// Display the file data
-// console.log(layout);
-
 
 const out = [];
-
 
 function repeat(qty, cmd) {
   for(let i = 0; i < qty; i+=1) {
@@ -251,7 +259,6 @@ function drawRect(x1, y1, x2, y2, layer) {
   out.push(`xdotool key Return`) ; // Select
   out.push("sleep 1");
   out.push(`xdotool key Return`) ; // Place the rect
-
   out.push("sleep 1")
   
   out.push(`xdotool key e`) ; // edit properties
