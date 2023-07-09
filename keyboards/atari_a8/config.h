@@ -18,3 +18,9 @@
 //#define NO_ACTION_LAYER
 //#define NO_ACTION_TAPPING
 //#define NO_ACTION_ONESHOT
+
+//#define OLED_DISPLAY_128X64
+#define OLED_IC OLED_IC_SH1106
+
+//#define OLED_DISPLAY_WIDTH 	128  //	The width of the OLED display.
+//#define OLED_DISPLAY_HEIGHT 	64 // 	The height of the OLED display.

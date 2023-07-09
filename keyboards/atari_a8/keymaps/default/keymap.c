@@ -2,11 +2,22 @@
 
 enum layer_names {
     _NORM,
+    _SHIFTED
 };
 
 enum custom_keycodes {
-  LOWER = SAFE_RANGE,
-  RAISE,
+    LOWER = SAFE_RANGE,
+
+    AT_MENU,
+    AT_TURBO,
+    AT_RESET,
+    AT_OPTION,
+    AT_SELECT,
+    AT_START,
+    AT_HELP,
+    AT_BREAK,
+    AT_FT,     // The function key
+    AT_PWR     // Power
 };
 
 
@@ -27,7 +38,7 @@ enum custom_keycodes {
 
 
 #define AT_CTRL KC_LCTL // 
-#define AT_SFT XXXXXXX // The Atari shift key
+#define AT_SFT MO(_SHIFTED) // The Atari shift key
 #define AT_UP XXXXXXX // Up arrow
 #define AT_CAPS XXXXXXX // 
 #define AT_INV XXXXXXX // 
@@ -59,5 +70,58 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*7*/   JS2_UP,     JS2_TRIG,   JS2_DOWN,   JS2_LEFT,   JS2_RIGHT,  KC_COMMA,   KC_DOT,     KC_SLASH,   AT_SFT,
 /*8*/   JS1_UP,     JS1_TRIG,   JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  AT_INV,     AT_BREAK,   KC_SPACE
 
+    ),
+
+[_SHIFTED] = LAYOUT(
+
+/*0*/   KC_ESC,     KC_EXLM,    KC_DQT,     KC_HASH,    KC_DLR,     KC_PERC,    KC_AMPR,    KC_QUOT,    KC_AT,
+/*1*/   KC_LPRN,    KC_RPRN,    KC_HOME,    KC_INS,     KC_DEL,     KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*2*/   S(KC_TAB),  S(KC_Q),    S(KC_W),    S(KC_E),    S(KC_R),    S(KC_T),    S(KC_Y),    S(KC_U),    S(KC_I),
+/*3*/   S(KC_O),    S(KC_P),    KC_UNDS,    KC_PIPE,    S(KC_ENT),  _______,    _______,    _______,    _______,
+/*4*/   AT_CTRL,    S(KC_A),    S(KC_S),    S(KC_D),    S(KC_F),    S(KC_G),    S(KC_H),    S(KC_J),    S(KC_K),
+/*5*/   S(KC_L),    KC_COLN,    KC_BSLS,    KC_CIRC,    AT_CAPS,    _______,    _______,    _______,    _______,
+/*6*/   AT_FT,      _______,    S(KC_Z),    S(KC_X),    S(KC_C),    S(KC_V),    S(KC_B),    S(KC_N),    S(KC_M),
+/*7*/   _______,    _______,    _______,    _______,    _______,    KC_LBRC,    KC_RBRC,    KC_QUES,    _______,
+/*8*/   _______,    _______,    _______,    _______,    _______,    S(AT_INV),  S(AT_BREAK), S(KC_SPACE)
+
     )
+
 };
+
+
+#ifdef OLED_ENABLE
+uint16_t startup_timer;
+
+oled_rotation_t oled_init_user(oled_rotation_t rotation) {
+    startup_timer = timer_read();
+    return rotation;
+}
+
+
+bool oled_task_user(void) {
+    oled_set_cursor(0, 0);
+
+    // Host Keyboard Layer Status
+    oled_write_P(PSTR(" Layer: "), false);
+
+    switch (get_highest_layer(layer_state)) {
+        case _NORM:
+            oled_write_P(PSTR("Default\n"), false);
+            break;
+        case _SHIFTED:
+            oled_write_P(PSTR("FN\n"), false);
+            break;
+        default:
+            // Or use the write_ln shortcut over adding '\n' to the end of your string
+            oled_write_ln_P(PSTR("Undefined"), false);
+    }
+
+    // Host Keyboard LED Status
+    led_t led_state = host_keyboard_led_state();
+    oled_write_P(led_state.num_lock ? PSTR("NUM ") : PSTR("    "), false);
+    oled_write_P(led_state.caps_lock ? PSTR("CAP ") : PSTR("    "), false);
+    oled_write_P(led_state.scroll_lock ? PSTR("SCR ") : PSTR("    "), false);
+    
+    return false;
+}
+#endif

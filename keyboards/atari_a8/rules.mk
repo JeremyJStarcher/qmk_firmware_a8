@@ -1,1 +1,4 @@
-# This file intentionally left blank
+OLED_ENABLE = yes
+OLED_DRIVER = SSD1306
+OLED_TRANSPORT = i2c
+OLED_DISPLAY_ADDRESS =	0x3C
