@@ -20,6 +20,10 @@ enum custom_keycodes {
 #define AT_START XXXXXXX
 #define AT_HELP XXXXXXX
 #define AT_BREAK XXXXXXX
+#define AT_FT XXXXXXX     // The function key
+#define AT_PWR XXXXXXX     // Power
+
+
 
 
 #define AT_CTRL KC_LCTL // 
@@ -44,15 +48,16 @@ enum custom_keycodes {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_NORM] = LAYOUT(
-/*0*/   AT_MENU,    AT_TURBO,   AT_RESET,   AT_OPTION,  AT_SELECT,  AT_START,   AT_HELP,    KC_ESC,     AT_SFT,
-/*1*/   KC_1,       KC_2,       KC_3,       KC_4,       KC_5,       KC_6,       KC_7,       KC_8,       KC_UP,       
-/*2*/   KC_9,       KC_0,       KC_LT,      KC_GT,      KC_BSPC,    AT_BREAK,   KC_TAB,     KC_Q,       KC_DOWN,
-/*3*/   KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,       KC_O,       KC_LEFT,
-/*4*/   KC_P,       KC_MINS,    KC_EQUAL,   KC_ENT,     AT_CTRL,    KC_A,       KC_S,       KC_D,       KC_RIGHT,
-/*5*/   KC_F,       KC_G,       KC_H,       KC_J,       KC_K,       KC_L,       KC_SCLN,    KC_PLUS,    KC_N,
-/*6*/   KC_PAST,    AT_CAPS,    AT_SFT,     KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_M,
-/*7*/   JS2_UP,     JS2_TRIG,   JS2_DOWN,   JS2_LEFT,   JS2_RIGHT,  FN_KEY,     AT_INV,     KC_SPACE,   KC_COMMA,
-/*8*/   JS1_UP,     JS1_TRIG,   JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  KC_DOT,     KC_SLASH
+
+/*0*/   KC_ESC,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5,       KC_6,       KC_7,       KC_8,
+/*1*/   KC_9,       KC_0,       KC_LT,      KC_GT,      KC_BSPC,    KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*2*/   KC_TAB,     KC_Q,       KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,
+/*3*/   KC_O,       KC_P,       KC_MINS,    KC_EQUAL,   KC_ENT,     AT_HELP,    AT_RESET,   AT_OPTION,  AT_SELECT,
+/*4*/   AT_CTRL,    KC_A,       KC_S,       KC_D,       KC_F,       KC_G,       KC_H,       KC_J,       KC_K,
+/*5*/   KC_L,       KC_SCLN,    KC_PLUS,    KC_PAST,    AT_CAPS,    AT_SELECT,  AT_PWR,     AT_MENU,    AT_TURBO,
+/*6*/   AT_FT,      AT_SFT,     KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,
+/*7*/   JS2_UP,     JS2_TRIG,   JS2_DOWN,   JS2_LEFT,   JS2_RIGHT,  KC_COMMA,   KC_DOT,     KC_SLASH,   AT_SFT,
+/*8*/   JS1_UP,     JS1_TRIG,   JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  AT_INV,     AT_BREAK,   KC_SPACE
 
     )
 };
