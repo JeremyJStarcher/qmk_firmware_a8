@@ -2,46 +2,30 @@
 
 enum layer_names {
     _NORM,
-    _SHIFTED
+    _SHIFTED,
+    _CTRL
 };
 
 enum custom_keycodes {
     LOWER = SAFE_RANGE,
 
-    AT_MENU,
-    AT_TURBO,
-    AT_RESET,
-    AT_OPTION,
-    AT_SELECT,
-    AT_START,
-    AT_HELP,
-    AT_BREAK,
-    AT_FT,     // The function key
-    AT_PWR     // Power
+    AT_MENU,    // Atari MENU key
+    AT_TURBO,   // Non-standard TURBO key, used by some emulators
+    AT_RESET,   // Atari RESET key
+    AT_OPTION,  // Atari OPTION key
+    AT_SELECT,  // Atari SELECT key
+    AT_START,   // Atari START key
+    AT_HELP,    // Atari HELP key (XL/XE models)
+    AT_BREAK,   // Atari BREAK key
+    AT_FT,      // Function key for programming keyboard
+    AT_PWR,     // Power key -- console dependent
+    AT_CAPS,    // Atari CAPS key
+    AT_INV      // Atari INVERSE key
 };
 
-
-//_______, KC_HOME, XXXXXXX, 
-
-#define AT_MENU XXXXXXX
-#define AT_TURBO XXXXXXX
-#define AT_RESET XXXXXXX
-#define AT_OPTION XXXXXXX
-#define AT_SELECT XXXXXXX
-#define AT_START XXXXXXX
-#define AT_HELP XXXXXXX
-#define AT_BREAK XXXXXXX
-#define AT_FT XXXXXXX     // The function key
-#define AT_PWR XXXXXXX     // Power
-
-
-
-
-#define AT_CTRL KC_LCTL // 
+#define AT_CTRL MO(_CTRL)
 #define AT_SFT MO(_SHIFTED) // The Atari shift key
-#define AT_UP XXXXXXX // Up arrow
-#define AT_CAPS XXXXXXX // 
-#define AT_INV XXXXXXX // 
+#define FN_KEY MO(_CTRL)
 
 #define JS1_UP XXXXXXX
 #define JS1_DOWN XXXXXXX
@@ -55,7 +39,9 @@ enum custom_keycodes {
 #define JS2_RIGHT XXXXXXX
 #define JS2_TRIG XXXXXXX
 
-#define FN_KEY XXXXXXX
+// No idea why I have to specify BOTH control keys, but "Atari800" emulator
+// wouldn't detect things unless I did.  Go figure.
+#define R(x) RCTL(LCTL(x))
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_NORM] = LAYOUT(
@@ -79,12 +65,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*2*/   S(KC_TAB),  S(KC_Q),    S(KC_W),    S(KC_E),    S(KC_R),    S(KC_T),    S(KC_Y),    S(KC_U),    S(KC_I),
 /*3*/   S(KC_O),    S(KC_P),    KC_UNDS,    KC_PIPE,    S(KC_ENT),  _______,    _______,    _______,    _______,
 /*4*/   AT_CTRL,    S(KC_A),    S(KC_S),    S(KC_D),    S(KC_F),    S(KC_G),    S(KC_H),    S(KC_J),    S(KC_K),
-/*5*/   S(KC_L),    KC_COLN,    KC_BSLS,    KC_CIRC,    AT_CAPS,    _______,    _______,    _______,    _______,
+/*5*/   S(KC_L),    KC_COLN,    KC_BSLS,    KC_CIRC,    S(AT_CAPS), _______,    _______,    _______,    _______,
 /*6*/   AT_FT,      _______,    S(KC_Z),    S(KC_X),    S(KC_C),    S(KC_V),    S(KC_B),    S(KC_N),    S(KC_M),
 /*7*/   _______,    _______,    _______,    _______,    _______,    KC_LBRC,    KC_RBRC,    KC_QUES,    _______,
 /*8*/   _______,    _______,    _______,    _______,    _______,    S(AT_INV),  S(AT_BREAK), S(KC_SPACE)
 
+    ),
+
+[_CTRL] = LAYOUT(
+
+/*0*/   R(KC_ESC),  R(KC_1),    R(KC_2),    R(KC_3),    R(KC_4),    R(KC_5),    R(KC_6),    R(KC_7),    R(KC_8),
+/*1*/   R(KC_9),    R(KC_0),    R(S(KC_COMMA)),   R(S(KC_DOT)),   R(KC_BSPC), KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*2*/   R(KC_TAB),  R(KC_Q),    R(KC_W),    R(KC_E),    R(KC_R),    R(KC_T),    R(KC_Y),    R(KC_U),    R(KC_I),
+/*3*/   R(KC_O),    R(KC_P),    KC_UP,      KC_DOWN,    R(KC_ENT),  _______,    _______,    _______,    _______,
+/*4*/   _______,    R(KC_A),    R(KC_S),    R(KC_D),    R(KC_F),    R(KC_G),    R(KC_H),    R(KC_J),    R(KC_K),
+/*5*/   R(KC_L),    R(KC_SCLN), KC_LEFT,    KC_RIGHT,   R(AT_CAPS), _______,    _______,    _______,    _______,
+/*6*/   AT_FT,      _______,    R(KC_Z),    R(KC_X),    R(KC_C),    R(KC_V),    R(KC_B),    R(KC_N),    R(KC_M),
+/*7*/   _______,    _______,    _______,    _______,    _______,    R(KC_COMMA),  R(KC_DOT),  R(KC_SLASH),    _______,
+/*8*/   _______,    _______,    _______,    _______,    _______,    R(AT_INV),  R(AT_BREAK), R(KC_SPACE)
     )
+
 
 };
 
@@ -106,10 +106,13 @@ bool oled_task_user(void) {
 
     switch (get_highest_layer(layer_state)) {
         case _NORM:
-            oled_write_P(PSTR("Default\n"), false);
+            oled_write_P(PSTR("NORMAL\n"), false);
             break;
         case _SHIFTED:
-            oled_write_P(PSTR("FN\n"), false);
+            oled_write_P(PSTR("SHIFTED\n"), false);
+            break;
+        case _CTRL:
+            oled_write_P(PSTR("CONTROL\n"), false);
             break;
         default:
             // Or use the write_ln shortcut over adding '\n' to the end of your string
@@ -118,10 +121,11 @@ bool oled_task_user(void) {
 
     // Host Keyboard LED Status
     led_t led_state = host_keyboard_led_state();
+    oled_write_P(PSTR(" "), false);
     oled_write_P(led_state.num_lock ? PSTR("NUM ") : PSTR("    "), false);
     oled_write_P(led_state.caps_lock ? PSTR("CAP ") : PSTR("    "), false);
     oled_write_P(led_state.scroll_lock ? PSTR("SCR ") : PSTR("    "), false);
-    
+
     return false;
 }
 #endif
