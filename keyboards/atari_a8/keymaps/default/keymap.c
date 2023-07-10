@@ -51,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*2*/   KC_TAB,     KC_Q,       KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,
 /*3*/   KC_O,       KC_P,       KC_MINS,    KC_EQUAL,   KC_ENT,     AT_HELP,    AT_RESET,   AT_OPTION,  AT_SELECT,
 /*4*/   AT_CTRL,    KC_A,       KC_S,       KC_D,       KC_F,       KC_G,       KC_H,       KC_J,       KC_K,
-/*5*/   KC_L,       KC_SCLN,    KC_PLUS,    KC_PAST,    AT_CAPS,    AT_SELECT,  AT_PWR,     AT_MENU,    AT_TURBO,
+/*5*/   KC_L,       KC_SCLN,    KC_PLUS,    KC_PAST,    AT_CAPS,    AT_START,   AT_PWR,     AT_MENU,    AT_TURBO,
 /*6*/   AT_FT,      AT_SFT,     KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,
 /*7*/   JS2_UP,     JS2_TRIG,   JS2_DOWN,   JS2_LEFT,   JS2_RIGHT,  KC_COMMA,   KC_DOT,     KC_SLASH,   AT_SFT,
 /*8*/   JS1_UP,     JS1_TRIG,   JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  AT_INV,     AT_BREAK,   KC_SPACE
@@ -84,8 +84,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*7*/   _______,    _______,    _______,    _______,    _______,    R(KC_COMMA),  R(KC_DOT),  R(KC_SLASH),    _______,
 /*8*/   _______,    _______,    _______,    _______,    _______,    R(AT_INV),  R(AT_BREAK), R(KC_SPACE)
     )
-
-
 };
 
 
@@ -129,3 +127,72 @@ bool oled_task_user(void) {
     return false;
 }
 #endif
+
+void handle_key(uint8_t code, bool pressed) {
+    if (pressed) {
+        register_code(code);
+    } else {
+        unregister_code(code);
+    }
+}
+
+void handle_key16(uint16_t code, bool pressed) {
+    if (pressed) {
+        register_code16(code);
+    } else {
+        unregister_code16(code);
+    }
+}
+
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        // case KC_CCCV:  // One key copy/paste
+        //     if (record->event.pressed) {
+        //         copy_paste_timer = timer_read();
+        //     } else {
+        //         if (timer_elapsed(copy_paste_timer) > TAPPING_TERM) {  // Hold, copy
+        //             tap_code_delay16(LCTL(KC_C));
+        //         } else {  // Tap, paste
+        //             tap_code_delay16(LCTL(KC_V));
+        //         }
+        //     } return true;
+
+        case AT_MENU:
+            handle_key(KC_F1, record->event.pressed);
+            return true;
+        case AT_TURBO:
+            handle_key(KC_F12, record->event.pressed);
+            return true;
+        case AT_RESET:
+            handle_key(KC_F5, record->event.pressed);
+            return true;
+        case AT_OPTION:
+            handle_key(KC_F2, record->event.pressed);
+            return true;
+        case AT_SELECT:
+            handle_key(KC_F3, record->event.pressed);
+            return true;
+        case AT_START:
+            handle_key(KC_F4, record->event.pressed);
+            return true;
+        case AT_HELP:
+            handle_key(KC_F6, record->event.pressed);
+            return true;
+        case AT_BREAK:
+            handle_key(KC_F7, record->event.pressed);
+            return true;
+        case AT_PWR:
+            handle_key16(S(KC_F5), record->event.pressed);
+            return true;
+        case AT_CAPS:
+            handle_key(KC_CAPS_LOCK, record->event.pressed);
+            return true;
+        case AT_INV:
+            handle_key(KC_GRAVE, record->event.pressed);
+            return true;
+        case AT_FT:
+        default:
+            return true;
+    }
+}
