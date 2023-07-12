@@ -37,13 +37,11 @@ enum custom_keycodes {
     JS1_LEFT,
     JS1_RIGHT,
     JS1_TRIG
-
 };
 
 #define AT_CTRL MO(_CTRL)
 #define AT_SFT MO(_SHIFTED) // The Atari shift key
 #define FN_KEY MO(_ALT)
-
 
 #define JS2_UP XXXXXXX
 #define JS2_DOWN XXXXXXX
@@ -51,8 +49,10 @@ enum custom_keycodes {
 #define JS2_RIGHT XXXXXXX
 #define JS2_TRIG XXXXXXX
 
-// No idea why I have to specify BOTH control keys, but "Atari800" emulator
-// wouldn't detect things unless I did.  Go figure.
+/*
+    No idea why I have to specify BOTH control keys, but "Atari800" emulator
+    wouldn't detect things unless I did.  Go figure.
+*/
 #define R(x) RCTL(LCTL(x))
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -152,6 +152,15 @@ bool oled_task_user(void) {
     return false;
 }
 #endif
+
+#ifdef JOYSTICK_ENABLE
+joystick_config_t joystick_axes[JOYSTICK_AXIS_COUNT] = {
+    JOYSTICK_AXIS_VIRTUAL, // x
+    JOYSTICK_AXIS_VIRTUAL  // y
+};
+#endif
+
+
 
 void handle_key(uint8_t code, bool pressed) {
     if (pressed) {

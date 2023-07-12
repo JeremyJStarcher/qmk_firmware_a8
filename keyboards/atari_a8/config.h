@@ -24,3 +24,6 @@
 
 //#define OLED_DISPLAY_WIDTH 	128  //	The width of the OLED display.
 //#define OLED_DISPLAY_HEIGHT 	64 // 	The height of the OLED display.
+
+#define JOYSTICK_AXIS_COUNT 2
+#define JOYSTICK_BUTTON_COUNT 1
