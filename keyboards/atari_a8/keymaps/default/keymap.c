@@ -1,5 +1,13 @@
 #include QMK_KEYBOARD_H
 
+
+/*
+    Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
+    But in every program I know of, it acts exactly the same as SHIFT-< (CLEAR)
+    So I doubt it really matters, but I can tell the difference in a 1:1 key 
+    comparision to my 130XE
+*/
+
 enum layer_names {
     _NORM,
     _SHIFTED,
@@ -21,18 +29,21 @@ enum custom_keycodes {
     AT_FT,      // Function key for programming keyboard
     AT_PWR,     // Power key -- console dependent
     AT_CAPS,    // Atari CAPS key
-    AT_INV      // Atari INVERSE key
+    AT_INV,      // Atari INVERSE key
+
+
+    JS1_UP,
+    JS1_DOWN,
+    JS1_LEFT,
+    JS1_RIGHT,
+    JS1_TRIG
+
 };
 
 #define AT_CTRL MO(_CTRL)
 #define AT_SFT MO(_SHIFTED) // The Atari shift key
 #define FN_KEY MO(_ALT)
 
-#define JS1_UP XXXXXXX
-#define JS1_DOWN XXXXXXX
-#define JS1_LEFT XXXXXXX
-#define JS1_RIGHT XXXXXXX
-#define JS1_TRIG XXXXXXX
 
 #define JS2_UP XXXXXXX
 #define JS2_DOWN XXXXXXX
@@ -62,7 +73,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [_SHIFTED] = LAYOUT(
 
 /*0*/   KC_ESC,     KC_EXLM,    KC_DQT,     KC_HASH,    KC_DLR,     KC_PERC,    KC_AMPR,    KC_QUOT,    KC_AT,
-/*1*/   KC_LPRN,    KC_RPRN,    KC_HOME,    KC_INS,     KC_DEL,     KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*1*/   KC_LPRN,    KC_RPRN,    KC_HOME,    S(KC_INS),  S(KC_DEL),  KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
 /*2*/   S(KC_TAB),  S(KC_Q),    S(KC_W),    S(KC_E),    S(KC_R),    S(KC_T),    S(KC_Y),    S(KC_U),    S(KC_I),
 /*3*/   S(KC_O),    S(KC_P),    KC_UNDS,    KC_PIPE,    S(KC_ENT),  _______,    _______,    _______,    _______,
 /*4*/   AT_CTRL,    S(KC_A),    S(KC_S),    S(KC_D),    S(KC_F),    S(KC_G),    S(KC_H),    S(KC_J),    S(KC_K),
@@ -70,13 +81,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*6*/   _______,    _______,    S(KC_Z),    S(KC_X),    S(KC_C),    S(KC_V),    S(KC_B),    S(KC_N),    S(KC_M),
 /*7*/   _______,    _______,    _______,    _______,    _______,    KC_LBRC,    KC_RBRC,    KC_QUES,    _______,
 /*8*/   _______,    _______,    _______,    _______,    _______,    S(AT_INV),  S(AT_BREAK), S(KC_SPACE)
-
     ),
 
 [_CTRL] = LAYOUT(
 
 /*0*/   R(KC_ESC),  R(KC_1),    R(KC_2),    R(KC_3),    R(KC_4),    R(KC_5),    R(KC_6),    R(KC_7),    R(KC_8),
-/*1*/   R(KC_9),    R(KC_0),    R(S(KC_COMMA)),   R(S(KC_DOT)),   R(KC_BSPC), KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*1*/   R(KC_9),    R(KC_0),    KC_HOME,    KC_INS,     KC_DEL,     KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
 /*2*/   R(KC_TAB),  R(KC_Q),    R(KC_W),    R(KC_E),    R(KC_R),    R(KC_T),    R(KC_Y),    R(KC_U),    R(KC_I),
 /*3*/   R(KC_O),    R(KC_P),    KC_UP,      KC_DOWN,    R(KC_ENT),  _______,    _______,    _______,    _______,
 /*4*/   _______,    R(KC_A),    R(KC_S),    R(KC_D),    R(KC_F),    R(KC_G),    R(KC_H),    R(KC_J),    R(KC_K),
