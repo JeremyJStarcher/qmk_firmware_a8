@@ -31,17 +31,17 @@ enum custom_keycodes {
     AT_CAPS,    // Atari CAPS key
     AT_INV,      // Atari INVERSE key
 
-
     JS1_UP,
     JS1_DOWN,
     JS1_LEFT,
-    JS1_RIGHT,
-    JS1_TRIG
+    JS1_RIGHT
 };
 
 #define AT_CTRL MO(_CTRL)
 #define AT_SFT MO(_SHIFTED) // The Atari shift key
 #define FN_KEY MO(_ALT)
+#define JS1_TRIG JS_0
+
 
 #define JS2_UP XXXXXXX
 #define JS2_DOWN XXXXXXX
@@ -180,6 +180,26 @@ void handle_key16(uint16_t code, bool pressed) {
 
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+
+#ifdef JOYSTICK_ENABLE
+    int16_t precision_val = 127;
+
+    switch (keycode) {
+        case JS1_UP:
+            joystick_set_axis(1, record->event.pressed ? -precision_val : 0);
+            return false;
+        case JS1_DOWN:
+            joystick_set_axis(1, record->event.pressed ? precision_val : 0);
+            return false;
+        case JS1_LEFT:
+            joystick_set_axis(0, record->event.pressed ? -precision_val : 0);
+            return false;
+        case JS1_RIGHT:
+            joystick_set_axis(0, record->event.pressed ? precision_val : 0);
+            return false;
+    }
+#endif
+
     switch (keycode) {
         // case KC_CCCV:  // One key copy/paste
         //     if (record->event.pressed) {
