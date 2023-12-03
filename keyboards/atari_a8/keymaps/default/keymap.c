@@ -1,47 +1,45 @@
 #include QMK_KEYBOARD_H
 
+#include <avr/io.h>
+#include <util/delay.h>
 
 /*
     Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
     But in every program I know of, it acts exactly the same as SHIFT-< (CLEAR)
-    So I doubt it really matters, but I can tell the difference in a 1:1 key 
+    So I doubt it really matters, but I can tell the difference in a 1:1 key
     comparision to my 130XE
 */
 
-enum layer_names {
-    _NORM,
-    _SHIFTED,
-    _CTRL,
-    _ALT
-};
+enum layer_names { _NORM, _SHIFTED, _CTRL, _ALT };
 
+// clang-format off
 enum custom_keycodes {
     LOWER = SAFE_RANGE,
 
-    AT_MENU,    // Atari MENU key
-    AT_TURBO,   // Non-standard TURBO key, used by some emulators
-    AT_RESET,   // Atari RESET key
-    AT_OPTION,  // Atari OPTION key
-    AT_SELECT,  // Atari SELECT key
-    AT_START,   // Atari START key
-    AT_HELP,    // Atari HELP key (XL/XE models)
-    AT_BREAK,   // Atari BREAK key
-    AT_FT,      // Function key for programming keyboard
-    AT_PWR,     // Power key -- console dependent
-    AT_CAPS,    // Atari CAPS key
-    AT_INV,      // Atari INVERSE key
+    AT_MENU,   // Atari MENU key
+    AT_TURBO,  // Non-standard TURBO key, used by some emulators
+    AT_RESET,  // Atari RESET key
+    AT_OPTION, // Atari OPTION key
+    AT_SELECT, // Atari SELECT key
+    AT_START,  // Atari START key
+    AT_HELP,   // Atari HELP key (XL/XE models)
+    AT_BREAK,  // Atari BREAK key
+    AT_FT,     // Function key for programming keyboard
+    AT_PWR,    // Power key -- console dependent
+    AT_CAPS,   // Atari CAPS key
+    AT_INV,    // Atari INVERSE key
 
     JS1_UP,
     JS1_DOWN,
     JS1_LEFT,
     JS1_RIGHT
 };
+// clang-format on
 
 #define AT_CTRL MO(_CTRL)
 #define AT_SFT MO(_SHIFTED) // The Atari shift key
 #define FN_KEY MO(_ALT)
 #define JS1_TRIG JS_0
-
 
 #define JS2_UP XXXXXXX
 #define JS2_DOWN XXXXXXX
@@ -54,6 +52,8 @@ enum custom_keycodes {
     wouldn't detect things unless I did.  Go figure.
 */
 #define R(x) RCTL(LCTL(x))
+
+// clang-format off
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_NORM] = LAYOUT(
@@ -110,7 +110,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 
 };
-
+// clang-format on
 
 #ifdef OLED_ENABLE
 uint16_t startup_timer;
@@ -119,7 +119,6 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     startup_timer = timer_read();
     return rotation;
 }
-
 
 bool oled_task_user(void) {
     oled_set_cursor(0, 0);
@@ -160,8 +159,6 @@ joystick_config_t joystick_axes[JOYSTICK_AXIS_COUNT] = {
 };
 #endif
 
-
-
 void handle_key(uint8_t code, bool pressed) {
     if (pressed) {
         register_code(code);
@@ -178,9 +175,7 @@ void handle_key16(uint16_t code, bool pressed) {
     }
 }
 
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-
 #ifdef JOYSTICK_ENABLE
     int16_t precision_val = 127;
 
@@ -201,16 +196,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #endif
 
     switch (keycode) {
-        // case KC_CCCV:  // One key copy/paste
-        //     if (record->event.pressed) {
-        //         copy_paste_timer = timer_read();
-        //     } else {
-        //         if (timer_elapsed(copy_paste_timer) > TAPPING_TERM) {  // Hold, copy
-        //             tap_code_delay16(LCTL(KC_C));
-        //         } else {  // Tap, paste
-        //             tap_code_delay16(LCTL(KC_V));
-        //         }
-        //     } return true;
+            // case KC_CCCV:  // One key copy/paste
+            //     if (record->event.pressed) {
+            //         copy_paste_timer = timer_read();
+            //     } else {
+            //         if (timer_elapsed(copy_paste_timer) > TAPPING_TERM) {  // Hold, copy
+            //             tap_code_delay16(LCTL(KC_C));
+            //         } else {  // Tap, paste
+            //             tap_code_delay16(LCTL(KC_V));
+            //         }
+            //     } return true;
 
         case AT_MENU:
             handle_key(KC_F1, record->event.pressed);
@@ -249,4 +244,189 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             return true;
     }
+}
+
+int  show_led(void);
+void CS_HIGH(void);
+void CS_LOW(void);
+void INIT_PORT(void);
+
+void keyboard_post_init_kb(void) {
+    // Call the post init code.
+    show_led();
+}
+
+/*
+  One MAX7219 connected to an 8x8 LED matrix.
+ */
+
+void CS_HIGH() {
+    PORTB |= (1 << PB1);
+    PORTF |= (1 << PF7);
+    PORTF |= (1 << PF1);
+}
+
+void CS_LOW() {
+    PORTB &= ~(1 << PB1);
+    PORTF &= ~(1 << PF7);
+    PORTF &= ~(1 << PF1);
+}
+
+void INIT_PORT() {
+    DDRF |= (1 << PF5) | (1 << PF4) | (1 << PF6) | (1 << PF7) | (1 << PF1);
+    DDRB |= (1 << PB1);
+}
+
+#define CLK_HIGH() PORTF |= (1 << PF4)
+#define CLK_LOW() PORTF &= ~(1 << PF4)
+//#define CS_HIGH() cs_high()
+//#define CS_LOW() PORTF &= ~(1 << PF1)
+#define DATA_HIGH() PORTF |= (1 << PF6)
+#define DATA_LOW() PORTF &= ~(1 << PF6)
+// #define INIT_PORT() DDRF |= (1 << PF5) | (1 << PF4) | (1 << PF6)| (1 << PF7)
+
+// clang-format off
+
+uint8_t smile[8] = {
+        0b00000000,
+        0b01100110,
+        0b01100110,
+        0b00011000,
+        0b00011000,
+        0b10000001,
+        0b01000010,
+        0b00111100};
+
+uint8_t sad[8] = {
+        0b00000000,
+        0b01100110,
+        0b01100110,
+        0b00011000,
+        0b00011000,
+        0b00000000,
+        0b00111100,
+        0b01000010,
+};
+// clang-format on
+
+void spi_send(uint8_t data) {
+    uint8_t i;
+
+    for (i = 0; i < 8; i++, data <<= 1) {
+        CLK_LOW();
+        if (data & 0x80)
+            DATA_HIGH();
+        else
+            DATA_LOW();
+        CLK_HIGH();
+    }
+}
+
+void max7219_writec(uint8_t high_byte, uint8_t low_byte) {
+    CS_LOW();
+    spi_send(high_byte);
+    spi_send(low_byte);
+    CS_HIGH();
+}
+
+void max7219_clear(void) {
+    uint8_t i;
+    for (i = 0; i < 8; i++) {
+        max7219_writec(i + 1, 0);
+    }
+}
+
+void max7219_init(void) {
+    INIT_PORT();
+    // Decode mode: none
+    max7219_writec(0x09, 0);
+    // Intensity: 3 (0-15)
+    max7219_writec(0x0A, 1);
+    // Scan limit: All "digits" (rows) on
+    max7219_writec(0x0B, 7);
+    // Shutdown register: Display on
+    max7219_writec(0x0C, 1);
+    // Display test: off
+    max7219_writec(0x0F, 0);
+    max7219_clear();
+}
+
+uint8_t display[8];
+
+void update_display(void) {
+    uint8_t i;
+
+    for (i = 0; i < 8; i++) {
+        max7219_writec(i + 1, display[i]);
+    }
+}
+
+void image(uint8_t im[8]) {
+    uint8_t i;
+
+    for (i = 0; i < 8; i++)
+        display[i] = im[i];
+}
+
+void set_pixel(uint8_t r, uint8_t c, uint8_t value) {
+    switch (value) {
+        case 0: // Clear bit
+            display[r] &= (uint8_t) ~(0x80 >> c);
+            break;
+        case 1: // Set bit
+            display[r] |= (0x80 >> c);
+            break;
+        default: // XOR bit
+            display[r] ^= (0x80 >> c);
+            break;
+    }
+}
+
+int show_led(void) {
+    static bool mood = true;
+    mood             = !mood;
+
+    //   uint8_t i;
+
+    uint8_t save_data_direction = DDRF;
+    uint8_t save_port           = PORTF;
+
+    uint8_t ddrb  = DDRB;
+    uint8_t portb = PORTB;
+
+    max7219_init();
+    if (mood) {
+        image(sad);
+    } else {
+        image(smile);
+    }
+    update_display();
+
+    PORTF = save_port;
+    DDRF  = save_data_direction;
+
+    PORTB = portb;
+    DDRB  = ddrb;
+
+    CS_HIGH();
+
+    return 0;
+
+    // while (1) {
+    //     image(sad);
+    //     update_display();
+    //     _delay_ms(500);
+    //     image(smile);
+    //     update_display();
+    //     _delay_ms(500);
+
+    //     // Invert display
+    //     //  for (i = 0 ; i < 8*8; i++)
+    //     //  {
+    //     //      set_pixel(i / 8, i % 8, 2);
+    //     //      update_display();
+    //     //      _delay_ms(10);
+    //     //  }
+    //     _delay_ms(500);
+    // }
 }
