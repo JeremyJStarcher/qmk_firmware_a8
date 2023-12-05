@@ -48,3 +48,6 @@
 
 // 	If defined, input characters will wrap to the next line
 // #define HD44780_WRAP_LINES
+
+
+#define MATRIX_UNSELECT_DRIVE_HIGH
