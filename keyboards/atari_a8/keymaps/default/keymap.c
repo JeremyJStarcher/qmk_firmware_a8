@@ -250,10 +250,15 @@ int  show_led(void);
 void CS_HIGH(void);
 void CS_LOW(void);
 void INIT_PORT(void);
+void enable_max7219_select(void);
+void disable_max7219_select(void);
+
 
 void keyboard_post_init_kb(void) {
     // Call the post init code.
-    show_led();
+     while(1) {
+     show_led();
+     }
 }
 
 /*
@@ -277,12 +282,13 @@ void INIT_PORT() {
     DDRB |= (1 << PB1);
 }
 
+
 #define CLK_HIGH() PORTF |= (1 << PF4)
 #define CLK_LOW() PORTF &= ~(1 << PF4)
 //#define CS_HIGH() cs_high()
 //#define CS_LOW() PORTF &= ~(1 << PF1)
-#define DATA_HIGH() PORTF |= (1 << PF6)
-#define DATA_LOW() PORTF &= ~(1 << PF6)
+#define DATA_HIGH() PORTF |= (1 << PF5)
+#define DATA_LOW() PORTF &= ~(1 << PF5)
 // #define INIT_PORT() DDRF |= (1 << PF5) | (1 << PF4) | (1 << PF6)| (1 << PF7)
 
 // clang-format off
@@ -308,6 +314,17 @@ uint8_t sad[8] = {
         0b01000010,
 };
 // clang-format on
+
+void enable_max7219_select() {
+     // Enable by sending them low
+     PORTF &= ~(1 << PF6);
+     PORTF &= ~(1 << PF7);
+}
+
+void disable_max7219_select() {
+     PORTF |= (1 << PF6);
+     PORTF |= (1 << PF7);
+}
 
 void spi_send(uint8_t data) {
     uint8_t i;
@@ -394,6 +411,8 @@ int show_led(void) {
     uint8_t ddrb  = DDRB;
     uint8_t portb = PORTB;
 
+    enable_max7219_select();
+
     max7219_init();
     if (mood) {
         image(sad);
@@ -409,6 +428,8 @@ int show_led(void) {
     DDRB  = ddrb;
 
     CS_HIGH();
+
+    disable_max7219_select();
 
     return 0;
 
