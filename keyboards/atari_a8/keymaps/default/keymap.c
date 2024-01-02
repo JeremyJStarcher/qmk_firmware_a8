@@ -3,6 +3,9 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+bool run_max = false;
+
+
 /*
     Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
     But in every program I know of, it acts exactly the same as SHIFT-< (CLEAR)
@@ -239,6 +242,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true;
         case AT_INV:
             handle_key(KC_GRAVE, record->event.pressed);
+            run_max = true;
             return true;
         case AT_FT:
         default:
@@ -246,42 +250,71 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
+
+uint8_t save_data_direction;
+uint8_t save_port;
+
+uint8_t ddrb;
+uint8_t portb;
+
 int  show_led(void);
 void CS_HIGH(void);
 void CS_LOW(void);
 void INIT_PORT(void);
 void enable_max7219_select(void);
 void disable_max7219_select(void);
+void max7219_clear(void);
 
+void keyboard_post_init_kb(void) {}
 
-void keyboard_post_init_kb(void) {
-    // Call the post init code.
-     while(1) {
-     show_led();
-     }
+void housekeeping_task_user(void) {
+    if (run_max) {
+        enable_max7219_select();
+        show_led();
+        disable_max7219_select();
+        run_max = false;
+    }
 }
 
 /*
   One MAX7219 connected to an 8x8 LED matrix.
  */
 
-void CS_HIGH() {
+void enable_max7219_select() {
+    save_data_direction = DDRF;
+    save_port           = PORTF;
+
+    ddrb  = DDRB;
+    portb = PORTB;
+
+    // Enable by sending them low
+    PORTB &= ~(1 << PB1);
+    PORTF &= ~(1 << PF7);
+}
+
+void disable_max7219_select() {
     PORTB |= (1 << PB1);
     PORTF |= (1 << PF7);
-    PORTF |= (1 << PF1);
+
+    PORTF = save_port;
+    DDRF  = save_data_direction;
+
+    PORTB = portb;
+    DDRB  = ddrb;
+}
+
+void CS_HIGH() {
+    PORTF |= (1 << PF6);
 }
 
 void CS_LOW() {
-    PORTB &= ~(1 << PB1);
-    PORTF &= ~(1 << PF7);
-    PORTF &= ~(1 << PF1);
+    PORTF &= ~(1 << PF6);
 }
 
 void INIT_PORT() {
     DDRF |= (1 << PF5) | (1 << PF4) | (1 << PF6) | (1 << PF7) | (1 << PF1);
     DDRB |= (1 << PB1);
 }
-
 
 #define CLK_HIGH() PORTF |= (1 << PF4)
 #define CLK_LOW() PORTF &= ~(1 << PF4)
@@ -314,17 +347,6 @@ uint8_t sad[8] = {
         0b01000010,
 };
 // clang-format on
-
-void enable_max7219_select() {
-     // Enable by sending them low
-     PORTF &= ~(1 << PF6);
-     PORTF &= ~(1 << PF7);
-}
-
-void disable_max7219_select() {
-     PORTF |= (1 << PF6);
-     PORTF |= (1 << PF7);
-}
 
 void spi_send(uint8_t data) {
     uint8_t i;
@@ -405,14 +427,6 @@ int show_led(void) {
 
     //   uint8_t i;
 
-    uint8_t save_data_direction = DDRF;
-    uint8_t save_port           = PORTF;
-
-    uint8_t ddrb  = DDRB;
-    uint8_t portb = PORTB;
-
-    enable_max7219_select();
-
     max7219_init();
     if (mood) {
         image(sad);
@@ -421,15 +435,7 @@ int show_led(void) {
     }
     update_display();
 
-    PORTF = save_port;
-    DDRF  = save_data_direction;
-
-    PORTB = portb;
-    DDRB  = ddrb;
-
     CS_HIGH();
-
-    disable_max7219_select();
 
     return 0;
 
