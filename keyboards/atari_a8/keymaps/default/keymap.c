@@ -5,7 +5,6 @@
 
 bool run_max = false;
 
-
 /*
     Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
     But in every program I know of, it acts exactly the same as SHIFT-< (CLEAR)
@@ -31,6 +30,7 @@ enum custom_keycodes {
     AT_PWR,    // Power key -- console dependent
     AT_CAPS,   // Atari CAPS key
     AT_INV,    // Atari INVERSE key
+    AT_POWER,  // Atari/system power?
 
     JS1_UP,
     JS1_DOWN,
@@ -44,12 +44,6 @@ enum custom_keycodes {
 #define FN_KEY MO(_ALT)
 #define JS1_TRIG JS_0
 
-#define JS2_UP XXXXXXX
-#define JS2_DOWN XXXXXXX
-#define JS2_LEFT XXXXXXX
-#define JS2_RIGHT XXXXXXX
-#define JS2_TRIG XXXXXXX
-
 /*
     No idea why I have to specify BOTH control keys, but "Atari800" emulator
     wouldn't detect things unless I did.  Go figure.
@@ -60,57 +54,58 @@ enum custom_keycodes {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_NORM] = LAYOUT(
-
 /*0*/   KC_ESC,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5,       KC_6,       KC_7,       KC_8,
-/*1*/   KC_9,       KC_0,       KC_LT,      KC_GT,      KC_BSPC,    KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
-/*2*/   KC_TAB,     KC_Q,       KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,
-/*3*/   KC_O,       KC_P,       KC_MINS,    KC_EQUAL,   KC_ENT,     AT_HELP,    AT_RESET,   AT_OPTION,  AT_SELECT,
-/*4*/   AT_CTRL,    KC_A,       KC_S,       KC_D,       KC_F,       KC_G,       KC_H,       KC_J,       KC_K,
-/*5*/   KC_L,       KC_SCLN,    KC_PLUS,    KC_PAST,    AT_CAPS,    AT_START,   AT_PWR,     AT_MENU,    AT_TURBO,
-/*6*/   FN_KEY,     AT_SFT,     KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,
-/*7*/   JS2_UP,     JS2_TRIG,   JS2_DOWN,   JS2_LEFT,   JS2_RIGHT,  KC_COMMA,   KC_DOT,     KC_SLASH,   AT_SFT,
-/*8*/   JS1_UP,     JS1_TRIG,   JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  AT_INV,     AT_BREAK,   KC_SPACE
-
+/*1*/   KC_TAB,     KC_Q,       KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,
+/*2*/   AT_CTRL,    KC_A,       KC_S,       KC_D,       KC_F,       KC_G,       KC_H,       KC_J,       KC_K,
+/*3*/   AT_SFT,     KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,       KC_COMMA,
+/*4*/   KC_9,       KC_0,       KC_LT,      KC_GT,      KC_BSPC,    AT_BREAK,   KC_O,       KC_P,       KC_MINS,
+/*5*/   AT_INV,     KC_UP,      AT_CAPS,    KC_ASTR,    KC_PLUS,    KC_SCLN,    KC_L,       KC_EQUAL,   KC_ENT,
+/*6*/   KC_SPACE,   FN_KEY,     KC_DOT,     KC_SLASH,   AT_SFT,     KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*7*/   AT_SELECT,  AT_OPTION,  AT_RESET,   AT_HELP,    AT_MENU,    AT_POWER,   AT_TURBO,   AT_START,
+/*8*/   JS1_UP,     JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  JS1_TRIG
     ),
 
-[_SHIFTED] = LAYOUT(
+ [_SHIFTED] = LAYOUT(
 
-/*0*/   KC_ESC,     KC_EXLM,    KC_DQT,     KC_HASH,    KC_DLR,     KC_PERC,    KC_AMPR,    KC_QUOT,    KC_AT,
-/*1*/   KC_LPRN,    KC_RPRN,    KC_HOME,    S(KC_INS),  S(KC_DEL),  KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
-/*2*/   S(KC_TAB),  S(KC_Q),    S(KC_W),    S(KC_E),    S(KC_R),    S(KC_T),    S(KC_Y),    S(KC_U),    S(KC_I),
-/*3*/   S(KC_O),    S(KC_P),    KC_UNDS,    KC_PIPE,    S(KC_ENT),  _______,    _______,    _______,    _______,
-/*4*/   AT_CTRL,    S(KC_A),    S(KC_S),    S(KC_D),    S(KC_F),    S(KC_G),    S(KC_H),    S(KC_J),    S(KC_K),
-/*5*/   S(KC_L),    KC_COLN,    KC_BSLS,    KC_CIRC,    S(AT_CAPS), _______,    _______,    _______,    _______,
-/*6*/   _______,    _______,    S(KC_Z),    S(KC_X),    S(KC_C),    S(KC_V),    S(KC_B),    S(KC_N),    S(KC_M),
-/*7*/   _______,    _______,    _______,    _______,    _______,    KC_LBRC,    KC_RBRC,    KC_QUES,    _______,
-/*8*/   _______,    _______,    _______,    _______,    _______,    S(AT_INV),  S(AT_BREAK), S(KC_SPACE)
-    ),
+/*0*/   S(KC_ESC),  KC_EXLM,    KC_DQT,     KC_HASH,    KC_DLR,     KC_PERC,    KC_AMPR,    KC_QUOT,    KC_AT,
+/*1*/   S(KC_TAB),  S(KC_Q),    S(KC_W),    S(KC_E),    S(KC_R),    S(KC_T),    S(KC_Y),    S(KC_U),    S(KC_I),
+/*2*/   S(AT_CTRL), S(KC_A),    S(KC_S),    S(KC_D),    S(KC_F),    S(KC_G),    S(KC_H),    S(KC_J),    S(KC_K),
+/*3*/   _______,    S(KC_Z),    S(KC_X),    S(KC_C),    S(KC_V),    S(KC_B),    S(KC_N),    S(KC_M),    KC_LBRC,
+/*4*/   KC_LPRN,    KC_RPRN,    KC_HOME,    S(KC_INS),  S(KC_DEL),  AT_BREAK,   S(KC_O),    S(KC_P),    KC_UNDS,
+/*5*/   S(AT_INV),  KC_UP,      AT_CAPS,    KC_CIRC,    KC_BSLS,    KC_COLN,    S(KC_L),    KC_PIPE,    S(KC_ENT),
+/*6*/   S(KC_SPACE),   _______, KC_RBRC,    KC_QUES,    AT_SFT,     KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*7*/   AT_SELECT,  AT_OPTION,  AT_RESET,   AT_HELP,    AT_MENU,    AT_POWER,   AT_TURBO,   AT_START,
+/*8*/   JS1_UP,     JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  JS1_TRIG
+),
 
-[_CTRL] = LAYOUT(
+ [_CTRL] = LAYOUT(
+
 
 /*0*/   R(KC_ESC),  R(KC_1),    R(KC_2),    R(KC_3),    R(KC_4),    R(KC_5),    R(KC_6),    R(KC_7),    R(KC_8),
-/*1*/   R(KC_9),    R(KC_0),    KC_HOME,    KC_INS,     KC_DEL,     KC_UP,      KC_LEFT,    KC_DOWN,    KC_RIGHT,
-/*2*/   R(KC_TAB),  R(KC_Q),    R(KC_W),    R(KC_E),    R(KC_R),    R(KC_T),    R(KC_Y),    R(KC_U),    R(KC_I),
-/*3*/   R(KC_O),    R(KC_P),    KC_UP,      KC_DOWN,    R(KC_ENT),  _______,    _______,    _______,    _______,
-/*4*/   _______,    R(KC_A),    R(KC_S),    R(KC_D),    R(KC_F),    R(KC_G),    R(KC_H),    R(KC_J),    R(KC_K),
-/*5*/   R(KC_L),    R(KC_SCLN), KC_LEFT,    KC_RIGHT,   R(AT_CAPS), _______,    _______,    _______,    _______,
-/*6*/   _______,    _______,    R(KC_Z),    R(KC_X),    R(KC_C),    R(KC_V),    R(KC_B),    R(KC_N),    R(KC_M),
-/*7*/   _______,    _______,    _______,    _______,    _______,    R(KC_COMMA),  R(KC_DOT),  R(KC_SLASH),    _______,
-/*8*/   _______,    _______,    _______,    _______,    _______,    R(AT_INV),  R(AT_BREAK), R(KC_SPACE)
-    ),
+/*1*/   R(KC_TAB),  R(KC_Q),    R(KC_W),    R(KC_E),    R(KC_R),    R(KC_T),    R(KC_Y),    R(KC_U),    R(KC_I),
+/*2*/   _______,    R(KC_A),    R(KC_S),    R(KC_D),    R(KC_F),    R(KC_G),    R(KC_H),    R(KC_J),    R(KC_K),
+/*3*/   _______,    R(KC_Z),    R(KC_X),    R(KC_C),    R(KC_V),    R(KC_B),    R(KC_N),    R(KC_M),    R(KC_COMMA),
+/*4*/   R(KC_9),    R(KC_0),    KC_HOME,    KC_INS,     KC_DEL,     _______,    R(KC_O),    R(KC_P),    KC_UP,
+/*5*/   R(AT_INV),  KC_UP,      AT_CAPS,    KC_RIGHT,   KC_LEFT,    R(KC_SCLN), R(KC_L),    KC_DOWN,    R(KC_ENT),
+/*6*/   R(KC_SPACE),   _______, R(KC_DOT),  R(KC_SLASH),_______,    KC_LEFT,    KC_DOWN,    KC_RIGHT,
+/*7*/   AT_SELECT,  AT_OPTION,  AT_RESET,   AT_HELP,    AT_MENU,    AT_POWER,   AT_TURBO,   AT_START,
+/*8*/   JS1_UP,     JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  JS1_TRIG
+),
 
 [_ALT] = LAYOUT(
 
-/*0*/   KC_ESC,     KC_F1,      KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,      KC_F7,      KC_F8,
-/*1*/   KC_F9,      KC_F10,     KC_F11,     KC_F12,     _______,    _______,    _______,    _______,    _______,
-/*2*/   _______,    A(KC_Q),    A(KC_W),    A(KC_E),    A(KC_R),    A(KC_T),    A(KC_Y),    A(KC_U),    A(KC_I),
-/*3*/   A(KC_O),    A(KC_P),    _______,    _______,    _______,    _______,    _______,    _______,    _______,
-/*4*/   KC_RCTL,    A(KC_A),    A(KC_S),    A(KC_D),    A(KC_F),    A(KC_G),    A(KC_H),    A(KC_J),    A(KC_K),
-/*5*/   A(KC_L),    A(KC_SCLN), A(KC_PLUS), A(KC_PAST), AT_CAPS,    _______,    QK_BOOTLOADER,    _______,    _______,
-/*6*/   _______,    KC_LSFT,    A(KC_Z),    A(KC_X),    A(KC_C),    A(KC_V),    A(KC_B),    A(KC_N),    A(KC_M),
-/*7*/   _______,    _______,    _______,    _______,   _______,     A(KC_COMMA),  A(KC_DOT),  A(KC_SLASH),   KC_RSFT,
-/*8*/   _______,    _______,    _______,    _______,   _______,     AT_INV,     AT_BREAK,   KC_SPACE
-    )
+
+/*0*/   A(KC_ESC),  KC_F1,      KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,      KC_F7,      KC_F8,
+/*1*/   A(KC_TAB),  A(KC_Q),    A(KC_W),    A(KC_E),    A(KC_R),    A(KC_T),    A(KC_Y),    A(KC_U),    A(KC_I),
+/*2*/   _______,    A(KC_A),    A(KC_S),    A(KC_D),    A(KC_F),    A(KC_G),    A(KC_H),    A(KC_J),    A(KC_K),
+/*3*/   _______,    A(KC_Z),    A(KC_X),    A(KC_C),    A(KC_V),    A(KC_B),    A(KC_N),    A(KC_M),    A(KC_COMMA),
+/*4*/   KC_F9,      KC_F10,     KC_F11,     KC_F12,     A(KC_DEL),  _______,    A(KC_O),    A(KC_P),    A(KC_UP),
+/*5*/   A(AT_INV),  KC_UP,      AT_CAPS,    KC_RIGHT,   KC_LEFT,    A(KC_SCLN), A(KC_L),    KC_DOWN,    A(KC_ENT),
+/*6*/   A(KC_SPACE),   _______, A(KC_DOT),  A(KC_SLASH), _______,    A(KC_LEFT), A(KC_DOWN), A(KC_RIGHT),
+/*7*/   AT_SELECT,  AT_OPTION,  AT_RESET,   AT_HELP,    AT_MENU,    AT_POWER,   AT_TURBO,   AT_START,
+/*8*/   JS1_UP,     JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  JS1_TRIG
+
+)
 
 };
 // clang-format on
@@ -249,7 +244,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true;
     }
 }
-
 
 uint8_t save_data_direction;
 uint8_t save_port;
