@@ -2,8 +2,9 @@
     "manufacturer": "Retro Keys",
     "keyboard_name": "atari_a8",
     "maintainer": "jeremy.starcher",
-    "processor": "RP2040",
-    "bootloader": "rp2040",
+
+    "bootloader": "caterina",
+    "bootloader2": "atmel-dfu",
     "diode_direction": "COL2ROW",
     "features": {
         "bootmagic": true,
@@ -15,28 +16,29 @@
     },
     "matrix_pins": {
         "cols": [
-            "GP28",
-            "GP27",
-            "GP26",
-            "GP22",
-            "GP21",
-            "GP20",
-            "GP19",
-            "GP18",
-            "GP17"
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "B1",
+            "B3",
+            "B2",
+            "B6",
+            "B5"
         ],
         "rows": [
-            "GP0",
-            "GP1",
-            "GP2",
-            "GP3",
-            "GP4",
-            "GP5",
-            "GP6",
-            "GP7",
-            "GP8"
+            "D3",
+            "D2",
+            "D1",
+            "D0",
+            "D4",
+            "C6",
+            "D7",
+            "E6",
+            "B4"
         ]
     },
+    "processor": "atmega32u4",
     "url": "",
     "usb": {
         "device_version": "1.0.0",

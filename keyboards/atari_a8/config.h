@@ -49,5 +49,25 @@
 // 	If defined, input characters will wrap to the next line
 // #define HD44780_WRAP_LINES
 
-
 // #define MATRIX_UNSELECT_DRIVE_HIGH
+
+// https://docs.qmk.fm/#/i2c_driver?id=arm-configuration
+
+// settings for the oled keyboard demo with Adafruit 0.91" OLED display on the Stemma QT port
+#define OLED_DISPLAY_128X32
+#define I2C_DRIVER I2CD1
+
+// THIS DIFFERS FROM THE BOARD LAYOUT, MANUAL WIRING MAY NEED DONE
+#define I2C0_SDA_PIN GP16 // DECLARED AS 9
+#define I2C0_SCL_PIN GP9  // DECLARED AS 10
+
+// #define I2C1_SDA_PIN GP16  // DECLARED AS 9
+// #define I2C1_SCL_PIN GP9  // DECLARED AS 10
+
+// I2C1 - SDA 2/6/10/14/18/26
+// I2C2 - SCL 3/7/11/15/19/27
+
+#define I2C1_SDA_PIN GP14
+#define I2C1_SCL_PIN GP15
+
+#define I2C1_CLOCK_SPEED 400000
