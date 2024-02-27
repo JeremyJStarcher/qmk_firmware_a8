@@ -2,6 +2,10 @@
 
 // #include <util/delay.h>
 
+static void render_logo(void);
+
+bool render_frame(void);
+
 bool run_max = false;
 
 /*
@@ -112,12 +116,62 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #ifdef OLED_ENABLE
 uint16_t startup_timer;
 
+void wait2(void) {
+    uint16_t now = timer_read();
+
+    while (timer_read() < now + 10) {
+        ;
+    }
+}
+
+void oled_cls(void) {
+    int w;
+    int h;
+
+    for (w = 0; w < OLED_DISPLAY_WIDTH; w++) {
+        for (h = 0; h < OLED_DISPLAY_HEIGHT; h++) {
+            oled_write_pixel(w, h, ((h % 2) ^ (h % 2)) == 1);
+            // wait2();
+        }
+    }
+    //    oled_render();
+}
+
+void wait(void) {
+    uint16_t now = timer_read();
+
+    while (timer_read() < now + 1000) {
+        ;
+    }
+}
+
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     startup_timer = timer_read();
     return rotation;
 }
 
-bool oled_task_user2(void) {
+#    define FRAME_TIMEOUT (1000 / 40)
+
+bool oled_task_user(void) {
+    static uint16_t anim_timer = 0;
+
+    // time for the next frame?
+    if (timer_elapsed(anim_timer) > FRAME_TIMEOUT) {
+        anim_timer = timer_read();
+        return render_frame();
+    }
+    return false;
+}
+
+bool render_frame(void) {
+    if (startup_timer + (10 * 1000) > timer_read()) {
+        oled_set_cursor(0, 0);
+        oled_clear();
+        render_logo();
+        return false;
+    }
+
+    oled_clear();
     oled_set_cursor(0, 0);
 
     // Host Keyboard Layer Status
@@ -125,6 +179,7 @@ bool oled_task_user2(void) {
 
     switch (get_highest_layer(layer_state)) {
         case _NORM:
+            // render_logo();
             oled_write_P(PSTR("NORMAL\n"), false);
             break;
         case _SHIFTED:
@@ -132,6 +187,10 @@ bool oled_task_user2(void) {
             break;
         case _CTRL:
             oled_write_P(PSTR("CONTROL\n"), false);
+            break;
+        case _ALT:
+            oled_write_P(PSTR("ALT\n"), false);
+            return false;
             break;
         default:
             // Or use the write_ln shortcut over adding '\n' to the end of your string
@@ -141,12 +200,13 @@ bool oled_task_user2(void) {
     // Host Keyboard LED Status
     led_t led_state = host_keyboard_led_state();
     oled_write_P(PSTR(" "), false);
-    oled_write_P(led_state.num_lock ? PSTR("NUM ") : PSTR("    "), false);
-    oled_write_P(led_state.caps_lock ? PSTR("CAP ") : PSTR("    "), false);
-    oled_write_P(led_state.scroll_lock ? PSTR("SCR ") : PSTR("    "), false);
 
+    oled_write_P(led_state.num_lock ? PSTR(" NUM ") : PSTR("     "), led_state.num_lock);
+    oled_write_P(led_state.caps_lock ? PSTR(" CAP ") : PSTR("     "), led_state.caps_lock);
+    oled_write_P(led_state.scroll_lock ? PSTR(" SCR ") : PSTR("     "), led_state.scroll_lock);
     return false;
 }
+
 #endif
 
 #ifdef JOYSTICK_ENABLE
@@ -244,20 +304,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
-
 static void render_logo(void) {
-    static const char PROGMEM qmk_logo[] = {
-        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
-        0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,
-        0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00
-    };
+    static const char PROGMEM qmk_logo[] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00};
 
     oled_write_P(qmk_logo, false);
-}
-
-bool oled_task_user(void) {
-    render_logo();
-    return false;
 }
 
 #ifdef DOTHIS
@@ -326,12 +376,12 @@ void INIT_PORT() {
     DDRB |= (1 << PB1);
 }
 
-#define CLK_HIGH() PORTF |= (1 << PF4)
-#define CLK_LOW() PORTF &= ~(1 << PF4)
+#    define CLK_HIGH() PORTF |= (1 << PF4)
+#    define CLK_LOW() PORTF &= ~(1 << PF4)
 //#define CS_HIGH() cs_high()
 //#define CS_LOW() PORTF &= ~(1 << PF1)
-#define DATA_HIGH() PORTF |= (1 << PF5)
-#define DATA_LOW() PORTF &= ~(1 << PF5)
+#    define DATA_HIGH() PORTF |= (1 << PF5)
+#    define DATA_LOW() PORTF &= ~(1 << PF5)
 // #define INIT_PORT() DDRF |= (1 << PF5) | (1 << PF4) | (1 << PF6)| (1 << PF7)
 
 // clang-format off
