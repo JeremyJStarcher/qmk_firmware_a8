@@ -1,9 +1,21 @@
 #include QMK_KEYBOARD_H
 
+enum emu_modes { ATARI800_EMU, ALTIRRA, END_OF_EMU_LIST };
+
+typedef union {
+    uint32_t raw;
+    struct {
+        unsigned int emu_mode : 3;
+        bool         rgb_layer_change : 1;
+    };
+} user_config_t;
+
+user_config_t user_config;
+
 static void render_logo(void);
-bool render_frame(void);
-bool run_max = false;
-bool process_record_atari800_emu(uint16_t keycode, keyrecord_t *record);
+bool        render_frame(void);
+bool        run_max = false;
+bool        process_record_atari800_emu(uint16_t keycode, keyrecord_t *record);
 
 /*
     Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
@@ -31,6 +43,7 @@ enum custom_keycodes {
     AT_CAPS,   // Atari CAPS key
     AT_INV,    // Atari INVERSE key
     AT_POWER,  // Atari/system power?
+    KB_EMU,    // Change which emulator to target
 
     JS1_UP,
     JS1_DOWN,
@@ -100,8 +113,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*2*/   _______,    A(KC_A),    A(KC_S),    A(KC_D),    A(KC_F),    A(KC_G),    A(KC_H),    A(KC_J),    A(KC_K),
 /*3*/   _______,    A(KC_Z),    A(KC_X),    A(KC_C),    A(KC_V),    A(KC_B),    A(KC_N),    A(KC_M),    A(KC_COMMA),
 /*4*/   KC_F9,      KC_F10,     KC_F11,     KC_F12,     A(KC_DEL),  _______,    A(KC_O),    A(KC_P),    A(KC_UP),
-/*5*/   A(AT_INV),  KC_UP,      AT_CAPS,    KC_RIGHT,   KC_LEFT,    A(KC_SCLN), A(KC_L),    KC_DOWN,    A(KC_ENT),
-/*6*/   A(KC_SPACE),   _______, A(KC_DOT),  A(KC_SLASH), _______,    A(KC_LEFT), A(KC_DOWN), A(KC_RIGHT),
+/*5*/   A(AT_INV),  KB_EMU,     AT_CAPS,    _______,   _______,    A(KC_SCLN), A(KC_L),    KC_DOWN,    A(KC_ENT),
+/*6*/   A(KC_SPACE),   _______, A(KC_DOT),  A(KC_SLASH), _______,    _______, _______, _______,
 /*7*/   AT_SELECT,  AT_OPTION,  AT_RESET,   AT_HELP,    AT_MENU,    AT_POWER,   AT_TURBO,   AT_START,
 /*8*/   JS1_UP,     JS1_DOWN,   JS1_LEFT,   JS1_RIGHT,  JS1_TRIG
 
@@ -110,37 +123,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
+void keyboard_post_init_user(void) {
+    // Call the keymap level matrix init.
+
+    // Read the user config from EEPROM
+    user_config.raw = eeconfig_read_user();
+
+    // Set default layer, if enabled
+    if (user_config.rgb_layer_change) {
+    }
+}
+
 #ifdef OLED_ENABLE
 uint16_t startup_timer;
-
-void wait2(void) {
-    uint16_t now = timer_read();
-
-    while (timer_read() < now + 10) {
-        ;
-    }
-}
-
-void oled_cls(void) {
-    int w;
-    int h;
-
-    for (w = 0; w < OLED_DISPLAY_WIDTH; w++) {
-        for (h = 0; h < OLED_DISPLAY_HEIGHT; h++) {
-            oled_write_pixel(w, h, ((h % 2) ^ (h % 2)) == 1);
-            // wait2();
-        }
-    }
-    //    oled_render();
-}
-
-void wait(void) {
-    uint16_t now = timer_read();
-
-    while (timer_read() < now + 1000) {
-        ;
-    }
-}
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     startup_timer = timer_read();
@@ -161,7 +156,7 @@ bool oled_task_user(void) {
 }
 
 bool render_frame(void) {
-    if (startup_timer + (10 * 1000) > timer_read()) {
+    if (startup_timer + (3 * 1000) > timer_read()) {
         oled_set_cursor(0, 0);
         oled_clear();
         render_logo();
@@ -170,6 +165,15 @@ bool render_frame(void) {
 
     oled_clear();
     oled_set_cursor(0, 0);
+
+    switch (user_config.emu_mode) {
+        case ATARI800_EMU:
+            oled_write_P(PSTR(" ATARI800 EMU \n"), true);
+            break;
+        case ALTIRRA:
+            oled_write_P(PSTR(" ALTIRRA \n"), true);
+            break;
+    }
 
     // Host Keyboard Layer Status
     oled_write_P(PSTR(" Layer: "), false);
@@ -249,10 +253,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 #endif
 
-    return process_record_atari800_emu(keycode, record);
+    switch (keycode) {
+        case KB_EMU:
+            if (record->event.pressed) {
+                user_config.emu_mode += 1;
+                if (user_config.emu_mode == END_OF_EMU_LIST) {
+                    user_config.emu_mode = 0;
+                }
+                eeconfig_update_user(user_config.raw); // Writes the new status to EEPROM
+                return true;
+            }
+    }
 
+    switch (user_config.emu_mode) {
+        case ATARI800_EMU:
+            return process_record_atari800_emu(keycode, record);
+        case ALTIRRA:
+            break;
+    }
+    return false;
 }
-
 
 bool process_record_atari800_emu(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -295,8 +315,6 @@ bool process_record_atari800_emu(uint16_t keycode, keyrecord_t *record) {
             return true;
     }
 }
-
-
 
 static void render_logo(void) {
     static const char PROGMEM qmk_logo[] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00};
