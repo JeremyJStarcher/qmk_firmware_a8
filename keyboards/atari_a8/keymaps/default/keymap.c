@@ -140,9 +140,17 @@ void keyboard_post_init_user(void) {
     // Set default layer, if enabled
     if (user_config.rgb_layer_change) {
     }
+
+// Some OLEDs take a painfully long time to boot up. Plugging in a keyboard often results
+// in the screen not powering up.
+#ifdef OLED_ENABLE
+    wait_ms(2000);
+    oled_init(OLED_ROTATION_0);
+#endif
 }
 
 #ifdef OLED_ENABLE
+
 uint16_t startup_timer;
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
