@@ -1,5 +1,9 @@
 #include QMK_KEYBOARD_H
 
+#include "../../atarifont.h"
+
+#define FRAME_TIMEOUT (1000 / 20)
+
 enum emu_modes { ATARI800_EMU, ALTIRRA, END_OF_EMU_LIST };
 
 typedef union {
@@ -16,6 +20,7 @@ static void render_logo(void);
 bool        render_frame(void);
 bool        run_max = false;
 bool        process_record_atari800_emu(uint16_t keycode, keyrecord_t *record);
+bool        process_record_altirra_emu(uint16_t keycode, keyrecord_t *record);
 
 /*
     Known issue: I can't find any way to send a CTRL-< (CLEAR) key code.
@@ -142,8 +147,6 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
 
-#    define FRAME_TIMEOUT (1000 / 40)
-
 bool oled_task_user(void) {
     static uint16_t anim_timer = 0;
 
@@ -191,7 +194,6 @@ bool render_frame(void) {
             break;
         case _ALT:
             oled_write_P(PSTR("ALT\n"), false);
-            return false;
             break;
         default:
             // Or use the write_ln shortcut over adding '\n' to the end of your string
@@ -213,7 +215,7 @@ bool render_frame(void) {
 #ifdef JOYSTICK_ENABLE
 joystick_config_t joystick_axes[JOYSTICK_AXIS_COUNT] = {
     JOYSTICK_AXIS_VIRTUAL, // x
-    JOYSTICK_AXIS_VIRTUAL  // y
+    JOYSTICK_AXIS_VIRTUAL, // y
 };
 #endif
 
@@ -269,9 +271,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case ATARI800_EMU:
             return process_record_atari800_emu(keycode, record);
         case ALTIRRA:
-            break;
+            return process_record_altirra_emu(keycode, record);
     }
-    return false;
+    return true;
 }
 
 bool process_record_atari800_emu(uint16_t keycode, keyrecord_t *record) {
@@ -315,6 +317,60 @@ bool process_record_atari800_emu(uint16_t keycode, keyrecord_t *record) {
             return true;
     }
 }
+
+bool process_record_altirra_emu(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case AT_MENU:
+            // handle_key(KC_F1, record->event.pressed);
+            return true;
+        case AT_TURBO:
+            handle_key(KC_F1, record->event.pressed);
+            return true;
+        case AT_RESET:
+            handle_key(KC_F5, record->event.pressed);
+            return true;
+        case AT_OPTION:
+            handle_key(KC_F4, record->event.pressed);
+            return true;
+        case AT_SELECT:
+            handle_key(KC_F3, record->event.pressed);
+            return true;
+        case AT_START:
+            handle_key(KC_F2, record->event.pressed);
+            return true;
+        case AT_HELP:
+            handle_key(KC_F6, record->event.pressed);
+            return true;
+        case AT_BREAK:
+            handle_key(KC_F7, record->event.pressed);
+            return true;
+        case AT_PWR:
+            handle_key16(S(KC_F5), record->event.pressed);
+            return true;
+        case AT_CAPS:
+            handle_key(KC_CAPS_LOCK, record->event.pressed);
+            return true;
+        case AT_INV:
+            handle_key(KC_GRAVE, record->event.pressed);
+            run_max = true;
+            return true;
+        case AT_FT:
+        default:
+            return true;
+    }
+}
+
+/*
+F1 = Scroll quickly through a listing
+F2 = Start Console key
+F3 = Select Console key
+F4 = Option Console key
+F5 = Warm Reset
+F7 = Break out of a listing
+F8 = Pause a listing
+F9 = Pause activity
+F10 = Freeze listing
+*/
 
 static void render_logo(void) {
     static const char PROGMEM qmk_logo[] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00};
