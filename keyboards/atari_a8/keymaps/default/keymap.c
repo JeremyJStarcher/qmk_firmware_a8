@@ -16,6 +16,9 @@ typedef union {
 
 user_config_t user_config;
 
+static void at_writestr(char *str, bool rev);
+static void at_writechar(int ch, bool rev);
+static void at_home(void);
 static void render_logo(void);
 bool        render_frame(void);
 bool        run_max = false;
@@ -159,7 +162,7 @@ bool oled_task_user(void) {
 }
 
 bool render_frame(void) {
-    if (startup_timer + (3 * 1000) > timer_read()) {
+    if (startup_timer + (1 * 1000) > timer_read()) {
         oled_set_cursor(0, 0);
         oled_clear();
         render_logo();
@@ -168,45 +171,46 @@ bool render_frame(void) {
 
     oled_clear();
     oled_set_cursor(0, 0);
+    at_home();
 
     switch (user_config.emu_mode) {
         case ATARI800_EMU:
-            oled_write_P(PSTR(" ATARI800 EMU \n"), true);
+            at_writestr(" ATARI800 EMU \n", true);
             break;
         case ALTIRRA:
-            oled_write_P(PSTR(" ALTIRRA \n"), true);
+            at_writestr(" ALTIRRA \n", true);
             break;
     }
 
     // Host Keyboard Layer Status
-    oled_write_P(PSTR(" Layer: "), false);
+    at_writestr("LAYER: ", false);
 
     switch (get_highest_layer(layer_state)) {
         case _NORM:
-            // render_logo();
-            oled_write_P(PSTR("NORMAL\n"), false);
+            at_writestr("NORMAL\n", false);
             break;
         case _SHIFTED:
-            oled_write_P(PSTR("SHIFTED\n"), false);
+            at_writestr("SHIFTED\n", false);
             break;
         case _CTRL:
-            oled_write_P(PSTR("CONTROL\n"), false);
+            at_writestr("CONTROL\n", false);
             break;
         case _ALT:
-            oled_write_P(PSTR("ALT\n"), false);
+            at_writestr("ALT\n", false);
             break;
         default:
             // Or use the write_ln shortcut over adding '\n' to the end of your string
-            oled_write_ln_P(PSTR("Undefined"), false);
+            at_writestr("Undefined", false);
     }
 
     // Host Keyboard LED Status
     led_t led_state = host_keyboard_led_state();
-    oled_write_P(PSTR(" "), false);
+    at_writestr(" ", false);
 
-    oled_write_P(led_state.num_lock ? PSTR(" NUM ") : PSTR("     "), led_state.num_lock);
-    oled_write_P(led_state.caps_lock ? PSTR(" CAP ") : PSTR("     "), led_state.caps_lock);
-    oled_write_P(led_state.scroll_lock ? PSTR(" SCR ") : PSTR("     "), led_state.scroll_lock);
+    at_writestr(led_state.num_lock ? " NUM " : "     ", led_state.num_lock);
+    at_writestr(led_state.caps_lock ? " CAP " : "     ", led_state.caps_lock);
+    at_writestr(led_state.scroll_lock ? " SCR " : "     ", led_state.scroll_lock);
+
     return false;
 }
 
@@ -586,3 +590,75 @@ int show_led(void) {
     // }
 }
 #endif
+
+// Setup some mask which can be or'd with bytes to turn off pixels
+const uint8_t single_bit_masks[8] = {127, 191, 223, 239, 247, 251, 253, 254};
+
+#if 0
+static void fade_display(void) {
+    //Define the reader structure
+    oled_buffer_reader_t reader;
+    uint8_t buff_char;
+    if (random() % 30 == 0) {
+        srand(timer_read());
+        // Fetch a pointer for the buffer byte at index 0. The return structure
+        // will have the pointer and the number of bytes remaining from this
+        // index position if we want to perform a sequential read by
+        // incrementing the buffer pointer
+        reader = oled_read_raw(0);
+        //Loop over the remaining buffer and erase pixels as we go
+        for (uint16_t i = 0; i < reader.remaining_element_count; i++) {
+            //Get the actual byte in the buffer by dereferencing the pointer
+            buff_char = *reader.current_element;
+            if (buff_char != 0) {
+                oled_write_raw_byte(buff_char & single_bit_masks[rand() % 8], i);
+            }
+            //increment the pointer to fetch a new byte during the next loop
+            reader.current_element++;
+        }
+    }
+}
+#endif
+
+static int atari_x = 0;
+static int atari_y = 0;
+#define ATARI_FONT_WIDTH 8
+#define ATARI_FONT_HEIGHT 8
+#define ATARI_FONT_END 167
+
+static void at_home(void) {
+    atari_x = 0;
+    atari_y = 0;
+}
+
+static void at_writestr(char *str, bool rev) {
+    while (*str != '\0') {
+        at_writechar((int)*str, rev);
+        str++;
+    }
+}
+
+static void at_writechar(int ch, bool rev) {
+    if (ch > ATARI_FONT_END) {
+        return;
+    }
+
+    if (ch == '\n') {
+        atari_x = 0;
+        atari_y += ATARI_FONT_HEIGHT;
+        return;
+    }
+
+    int b;
+    int w;
+    int h;
+    int color;
+    for (w = 0; w < ATARI_FONT_WIDTH; w++) {
+        b = atari_font[(ch * ATARI_FONT_HEIGHT) + w];
+        for (h = ATARI_FONT_WIDTH; h >= 0; h--) {
+            color = rev ? !((b >> h) & 1) : ((b >> h) & 1);
+            oled_write_pixel(atari_x + w, atari_y + h, color);
+        }
+    }
+    atari_x += ATARI_FONT_WIDTH;
+}
